@@ -1,4 +1,125 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-height: 100dvh;
+  overflow-x: clip;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 76px;
+  padding: 14px var(--gutter);
+}
+
+// Logo A « Goutte » de la maquette
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: -6px;
+  padding: 6px;
+  border-radius: 14px;
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-size: 25px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+
+  &:hover { color: var(--color-text); }
+}
+.brand-drop {
+  width: 17px;
+  height: 17px;
+  background: var(--color-accent);
+  border-radius: 50% 0 50% 50%;
+  transform: rotate(-45deg);
+}
+.brand-accent { color: var(--color-accent); }
+
+.nav-desktop {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.nav-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 17px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover { filter: brightness(0.94); background: var(--color-neutral-200); color: var(--color-text); }
+  &.active { background: var(--color-accent-100); color: var(--color-accent-800); }
+  &.cta { background: var(--color-accent); color: var(--color-bg); }
+}
+
+.greeting {
+  margin-left: auto;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-neutral-700);
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: clamp(4px, 1.5vw, 20px) var(--gutter) 56px;
+}
+
+// Barre d'onglets mobile, collée en bas de l'écran
+.tabbar {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 8px 10px 14px;
+  background: var(--color-neutral-100);
+  box-shadow: 0 -1px 0 var(--color-divider), var(--shadow-md);
+}
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-height: 64px;
+  padding: 6px 2px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--color-neutral-800);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover { color: var(--color-neutral-900); }
+  &.active { color: var(--color-accent-800); }
+  &.active .tab-icon { background: var(--color-accent-100); }
+}
+.tab-icon {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 34px;
+  border-radius: 999px;
 }

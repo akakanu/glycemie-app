@@ -1,7 +1,7 @@
 import { FormControl, FormGroup } from '@angular/forms';
 import { safeReturnUrl } from '../pages/login';
 import { passwordStrength } from '../pages/register';
-import { matchFields, notInFuture, toDateTimeLocal } from './validators';
+import { dateTimeNotInFuture, decimalInRange, matchFields, notInFuture, toDateTimeLocal } from './validators';
 
 describe('matchFields', () => {
   const group = (a: string, b: string) =>
@@ -30,6 +30,41 @@ describe('notInFuture', () => {
   });
 });
 
+describe('dateTimeNotInFuture', () => {
+  const group = (date: Date) => {
+    const [d, t] = toDateTimeLocal(date).split('T');
+    return new FormGroup(
+      { date: new FormControl(d), time: new FormControl(t) },
+      { validators: dateTimeNotInFuture('date', 'time') },
+    );
+  };
+
+  it('combine la date et l’heure', () => {
+    expect(group(new Date(Date.now() + 3_600_000)).hasError('future')).toBe(true);
+    expect(group(new Date()).valid).toBe(true);
+  });
+});
+
+describe('decimalInRange', () => {
+  const check = (v: string) => decimalInRange(1, 33.3)(new FormControl(v));
+
+  it('accepte une valeur dans la plage, avec point ou virgule', () => {
+    expect(check('5.6')).toBeNull();
+    expect(check('5,6')).toBeNull();
+    expect(check('33.3')).toBeNull();
+  });
+
+  it('refuse une valeur hors plage ou illisible', () => {
+    expect(check('35.2')).toEqual({ range: true });
+    expect(check('0.5')).toEqual({ range: true });
+    expect(check('abc')).toEqual({ range: true });
+  });
+
+  it('laisse le champ vide à Validators.required', () => {
+    expect(check('')).toBeNull();
+  });
+});
+
 describe('toDateTimeLocal', () => {
   it('formate au format attendu par datetime-local', () => {
     expect(toDateTimeLocal(new Date(2026, 9, 7, 8, 5))).toBe('2026-10-07T08:05');
@@ -53,5 +88,9 @@ describe('passwordStrength', () => {
     expect(passwordStrength('').score).toBe(0);
     expect(passwordStrength('abcdefgh').score).toBe(1);
     expect(passwordStrength('Abcdefgh1234!').score).toBe(4);
+  });
+
+  it('indique la longueur manquante', () => {
+    expect(passwordStrength('abc').label).toBe('Robustesse : trop court (3 sur 8 caractères)');
   });
 });

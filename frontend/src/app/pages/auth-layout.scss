@@ -1,0 +1,9 @@
+// Mise en page commune à l'inscription et à la connexion : intro à gauche, formulaire à droite.
+.auth {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr));
+  gap: clamp(24px, 5vw, 72px);
+  align-items: start;
+  padding-top: clamp(8px, 3vw, 40px);
+}
+.auth .btn-primary { width: 100%; }

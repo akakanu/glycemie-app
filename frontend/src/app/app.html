@@ -1,21 +1,55 @@
 <header class="topbar">
-  <a class="brand" routerLink="/">Glyco<span>Suivi</span></a>
-  <nav aria-label="Navigation principale">
-    @if (auth.isAuthenticated()) {
-      <a routerLink="/mesures/nouvelle" routerLinkActive="active">Nouvelle mesure</a>
-      <a routerLink="/historique" routerLinkActive="active">Historique</a>
-      <button type="button" class="btn-link" (click)="auth.logout()">Déconnexion</button>
-    } @else {
-      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
-      <a routerLink="/connexion" routerLinkActive="active">Connexion</a>
-      <a routerLink="/inscription" class="btn btn-primary btn-sm">Créer un compte</a>
+  <a class="brand" [routerLink]="homeLink()" aria-label="GlycoSuivi, accueil">
+    <span class="brand-drop" aria-hidden="true"></span>
+    <span>Glyco<span class="brand-accent">Suivi</span></span>
+  </a>
+
+  <nav class="nav-desktop desktop-only" aria-label="Navigation principale">
+    @for (item of nav(); track item.label) {
+      @if (item.link) {
+        <a
+          class="nav-pill"
+          [class.active]="item.active"
+          [class.cta]="item.cta"
+          [routerLink]="item.link"
+          [attr.aria-current]="item.active ? 'page' : null"
+        >
+          <app-icon [name]="item.icon" [size]="20" />{{ item.label }}
+        </a>
+      } @else {
+        <button type="button" class="nav-pill" (click)="auth.logout()">
+          <app-icon [name]="item.icon" [size]="20" />{{ item.label }}
+        </button>
+      }
     }
   </nav>
+
+  @if (auth.user(); as user) {
+    <span class="greeting mobile-only">Bonjour, {{ user.firstName }}</span>
+  }
 </header>
 
-<main class="container">
-  @if (auth.user(); as user) {
-    <p class="greeting">Bonjour {{ user.firstName }}</p>
-  }
+<main class="content">
   <router-outlet />
 </main>
+
+<nav class="tabbar mobile-only" aria-label="Navigation principale">
+  @for (item of nav(); track item.label) {
+    @if (item.link) {
+      <a
+        class="tab"
+        [class.active]="item.active"
+        [routerLink]="item.link"
+        [attr.aria-current]="item.active ? 'page' : null"
+      >
+        <span class="tab-icon"><app-icon [name]="item.icon" /></span>
+        <span>{{ item.label }}</span>
+      </a>
+    } @else {
+      <button type="button" class="tab" (click)="auth.logout()">
+        <span class="tab-icon"><app-icon [name]="item.icon" /></span>
+        <span>{{ item.label }}</span>
+      </button>
+    }
+  }
+</nav>
