@@ -1,0 +1,26 @@
+# --- Secrets ---
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+
+# --- .NET ---
+bin/
+obj/
+TestResults/
+*.user
+
+# --- Node / Angular ---
+node_modules/
+dist/
+.angular/
+
+# --- Éditeurs et système ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.log

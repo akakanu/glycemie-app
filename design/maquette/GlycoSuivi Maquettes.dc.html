@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/organic-cd3feb02-cd5d-460f-aec2-b7af2b988e16/styles.css">
+<script src="_ds/organic-cd3feb02-cd5d-460f-aec2-b7af2b988e16/_ds_bundle.js"></script>
+<style>
+:root{--color-accent:#23726c;--color-accent-100:#e6f5f3;--color-accent-200:#cbebe7;--color-accent-300:#9fd6cf;--color-accent-400:#5fb3aa;--color-accent-500:#2f8f87;--color-accent-600:#1f6b65;--color-accent-700:#175650;--color-accent-800:#10403c;--color-accent-900:#0a2b28;
+--lvl-bas:#6b4fc4;--lvl-bas-fg:#4a2f8e;--lvl-bas-bg:#eee8fb;--lvl-normal:#5f8a3a;--lvl-normal-fg:#38551f;--lvl-normal-bg:#e6f2d6;--lvl-eleve:#d9822b;--lvl-eleve-fg:#8a4512;--lvl-eleve-bg:#fde8d2;--lvl-tres-eleve:#c8372d;--lvl-tres-eleve-fg:#97231b;--lvl-tres-eleve-bg:#fbe1dc;}
+body{margin:0}
+a{color:var(--color-accent-700)}
+a:hover{color:var(--color-accent-900)}
+</style>
+</helmet>
+<div style="font-family:var(--font-body); font-size:17px; line-height:1.55; color:var(--color-text); background:var(--color-neutral-200); padding:80px; display:flex; flex-direction:column; gap:96px; width:max-content; min-width:100%; box-sizing:border-box">
+
+<header style="display:flex; flex-direction:column; gap:10px; max-width:900px">
+  <span style="font-size:15px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--color-accent-700)">MVP · maquettes mobile 375 px et bureau 1280 px</span>
+  <h1 style="font-size:56px; margin:0">GlycoSuivi</h1>
+  <p style="margin:0; font-size:19px; color:var(--color-neutral-800)">Système visuel, composants et écrans. Chaque maquette est le même composant interactif : les formulaires, les filtres et la navigation fonctionnent.</p>
+  <nav style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px">
+    <a href="#systeme" class="tag tag-neutral" style="font-size:16px; padding:8px 16px; text-decoration:none">0 · Système</a>
+    <a href="#accueil" class="tag tag-neutral" style="font-size:16px; padding:8px 16px; text-decoration:none">1 · Accueil</a>
+    <a href="#inscription" class="tag tag-neutral" style="font-size:16px; padding:8px 16px; text-decoration:none">2 · Inscription</a>
+    <a href="#connexion" class="tag tag-neutral" style="font-size:16px; padding:8px 16px; text-decoration:none">3 · Connexion</a>
+    <a href="#saisie" class="tag tag-neutral" style="font-size:16px; padding:8px 16px; text-decoration:none">4 · Saisie</a>
+    <a href="#resultat" class="tag tag-neutral" style="font-size:16px; padding:8px 16px; text-decoration:none">5 · Résultat</a>
+    <a href="#historique" class="tag tag-neutral" style="font-size:16px; padding:8px 16px; text-decoration:none">6 · Historique</a>
+  </nav>
+</header>
+
+<section id="systeme" data-screen-label="0 Système" style="display:flex; flex-direction:column; gap:40px; background:var(--color-bg); border-radius:40px; padding:56px; width:1655px; box-sizing:border-box">
+  <h2 style="font-size:40px; margin:0">0 · Système visuel</h2>
+
+  <div style="display:flex; flex-direction:column; gap:16px">
+    <h3 style="font-size:24px; margin:0">Logo texte — 3 variantes</h3>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px">
+      <div class="card" style="padding:32px; gap:20px; min-height:180px">
+        <span style="display:inline-flex; align-items:center; gap:12px; font-family:var(--font-heading); font-size:40px; line-height:1">
+          <span style="width:26px; height:26px; background:var(--color-accent); border-radius:50% 0 50% 50%; transform:rotate(-45deg)"></span>
+          <span>Glyco<span style="color:var(--color-accent)">Suivi</span></span>
+        </span>
+        <p style="margin:0; font-size:16px; color:var(--color-neutral-700)"><strong style="color:var(--color-text)">A · Goutte.</strong> Mot unique, « Suivi » en turquoise. Utilisé par défaut dans les maquettes.</p>
+      </div>
+      <div class="card" style="padding:32px; gap:20px; min-height:180px">
+        <span style="display:inline-flex; align-items:center; gap:8px; line-height:1">
+          <span style="font-family:var(--font-heading); font-size:40px">glyco</span>
+          <span style="font-weight:700; font-size:26px; background:var(--color-accent); color:var(--color-bg); padding:7px 18px 9px; border-radius:999px">suivi</span>
+        </span>
+        <p style="margin:0; font-size:16px; color:var(--color-neutral-700)"><strong style="color:var(--color-text)">B · Pastille.</strong> Minuscules, « suivi » dans une pilule, rappel des boutons.</p>
+      </div>
+      <div class="card" style="padding:32px; gap:20px; min-height:180px">
+        <span style="display:inline-flex; align-items:center; gap:14px; line-height:1">
+          <span style="width:64px; height:64px; border-radius:50%; background:var(--color-accent-2-200); color:var(--color-accent-800); display:grid; place-items:center; font-family:var(--font-heading); font-size:34px; box-shadow:inset 0 0 0 4px var(--color-accent)">G</span>
+          <span style="display:flex; flex-direction:column; font-family:var(--font-heading); font-size:28px; line-height:1.05"><span>Glyco</span><span style="color:var(--color-accent)">Suivi</span></span>
+        </span>
+        <p style="margin:0; font-size:16px; color:var(--color-neutral-700)"><strong style="color:var(--color-text)">C · Monogramme.</strong> Cercle « G » réutilisable comme icône d'application.</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:40px">
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h3 style="font-size:24px; margin:0">Couleurs</h3>
+      <sc-for list="{{ ramps }}" as="rp" hint-placeholder-count="3">
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <span style="font-size:16px; font-weight:700">{{ rp.name }}</span>
+          <div style="display:grid; grid-template-columns:repeat(9,1fr); gap:6px">
+            <sc-for list="{{ rp.steps }}" as="st" hint-placeholder-count="9">
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <div style="height:52px; border-radius:16px; background:{{ st.v }}"></div>
+                <span style="font-size:13px; color:var(--color-neutral-700)">{{ st.n }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+      <p style="margin:0; font-size:16px; color:var(--color-neutral-700)">Fond crème #f5ead8, texte #201e1d. Le turquoise (#23726c) remplace la terre cuite du système Organic comme couleur principale, pour ne pas être confondu avec le niveau « Élevé ».</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h3 style="font-size:24px; margin:0">Niveaux glycémiques</h3>
+      <sc-for list="{{ levels }}" as="lv" hint-placeholder-count="4">
+        <div style="display:grid; grid-template-columns:150px 1fr; gap:16px; align-items:center; padding:14px 18px; border-radius:24px; background:{{ lv.bg }}">
+          <span style="justify-self:start; display:inline-flex; align-items:center; gap:8px; min-height:36px; padding:4px 16px 4px 10px; border-radius:999px; background:var(--color-neutral-100); color:{{ lv.fg }}; border:2px solid {{ lv.solid }}; font-size:17px; font-weight:700">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="{{ lv.icon }}"></path></svg>
+            {{ lv.label }}
+          </span>
+          <span style="font-size:15px; color:var(--color-neutral-800)">{{ lv.hex }}</span>
+        </div>
+      </sc-for>
+      <p style="margin:0; font-size:16px; color:var(--color-neutral-700)">Toujours couleur + icône + libellé. Texte foncé sur fond teinté : contraste ≥ 7:1.</p>
+    </div>
+  </div>
+
+  <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:40px">
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <h3 style="font-size:24px; margin:0">Typographie</h3>
+      <div style="display:flex; align-items:baseline; gap:20px"><span style="width:180px; flex:none; font-size:15px; color:var(--color-neutral-700)">Titre 1 · Caprasimo 48 / 36</span><span style="font-family:var(--font-heading); font-size:48px; line-height:1.1">Votre résultat</span></div>
+      <div style="display:flex; align-items:baseline; gap:20px"><span style="width:180px; flex:none; font-size:15px; color:var(--color-neutral-700)">Valeur · Caprasimo 104 / 76</span><span style="font-family:var(--font-heading); font-size:76px; line-height:1">{{ sampleVal }}</span></div>
+      <div style="display:flex; align-items:baseline; gap:20px"><span style="width:180px; flex:none; font-size:15px; color:var(--color-neutral-700)">Titre 2 · Caprasimo 24–28</span><span style="font-family:var(--font-heading); font-size:28px">Nos conseils</span></div>
+      <div style="display:flex; align-items:baseline; gap:20px"><span style="width:180px; flex:none; font-size:15px; color:var(--color-neutral-700)">Corps · Figtree 17</span><span style="font-size:17px">Saisissez votre glycémie, comprenez votre résultat.</span></div>
+      <div style="display:flex; align-items:baseline; gap:20px"><span style="width:180px; flex:none; font-size:15px; color:var(--color-neutral-700)">Libellé · Figtree 17 gras</span><span style="font-size:17px; font-weight:700">Courriel</span></div>
+      <div style="display:flex; align-items:baseline; gap:20px"><span style="width:180px; flex:none; font-size:15px; color:var(--color-neutral-700)">Aide · Figtree 16 (min.)</span><span style="font-size:16px; color:var(--color-neutral-700)">Valeur acceptée : de 1.0 à 33.3 mmol/L</span></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <h3 style="font-size:24px; margin:0">Espacements, rayons, ombres</h3>
+      <div style="display:flex; align-items:flex-end; gap:12px">
+        <sc-for list="{{ spaces }}" as="sp" hint-placeholder-count="7">
+          <div style="display:flex; flex-direction:column; align-items:center; gap:6px"><div style="width:{{ sp.px }}; height:{{ sp.px }}; border-radius:6px; background:var(--color-accent-300)"></div><span style="font-size:14px">{{ sp.n }}</span></div>
+        </sc-for>
+      </div>
+      <div style="display:flex; gap:16px">
+        <div style="display:flex; flex-direction:column; gap:6px"><div style="width:120px; height:64px; border-radius:20px; background:var(--color-surface)"></div><span style="font-size:14px">20 · alertes</span></div>
+        <div style="display:flex; flex-direction:column; gap:6px"><div style="width:120px; height:64px; border-radius:32px; background:var(--color-surface)"></div><span style="font-size:14px">28–32 · cartes</span></div>
+        <div style="display:flex; flex-direction:column; gap:6px"><div style="width:120px; height:64px; border-radius:999px; background:var(--color-surface)"></div><span style="font-size:14px">999 · boutons, champs</span></div>
+      </div>
+      <div style="display:flex; gap:16px; padding:8px 0">
+        <div class="elev-sm" style="width:120px; height:64px; border-radius:24px; background:var(--color-neutral-100); display:grid; place-items:center; font-size:14px">--shadow-sm</div>
+        <div class="elev-md" style="width:120px; height:64px; border-radius:24px; background:var(--color-neutral-100); display:grid; place-items:center; font-size:14px">--shadow-md</div>
+        <div class="elev-lg" style="width:120px; height:64px; border-radius:24px; background:var(--color-neutral-100); display:grid; place-items:center; font-size:14px">--shadow-lg</div>
+      </div>
+      <p style="margin:0; font-size:16px; color:var(--color-neutral-700)">Zones cliquables : 48 px minimum (boutons 56–62 px, champs 56 px).</p>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:16px">
+    <h3 style="font-size:24px; margin:0">Composants</h3>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:20px">
+      <div class="card" style="padding:28px; gap:14px">
+        <span style="font-size:15px; font-weight:700; color:var(--color-neutral-700)">Boutons</span>
+        <button class="btn btn-primary" style="min-height:58px; font-size:18px; padding:0 30px">Créer un compte</button>
+        <button class="btn btn-secondary" style="min-height:58px; font-size:18px; padding:0 30px; border:2px solid var(--color-accent); color:var(--color-accent-800)">Se connecter</button>
+        <button class="btn btn-primary" disabled="disabled" style="min-height:58px; font-size:18px; padding:0 30px">Désactivé</button>
+      </div>
+      <div class="card" style="padding:28px; gap:14px">
+        <span style="font-size:15px; font-weight:700; color:var(--color-neutral-700)">Champ de formulaire</span>
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <label style="font-size:17px; font-weight:700">Courriel</label>
+          <input class="input" value="marie.tremblay@exemple.ca" style="min-height:56px; font-size:18px; padding:0 20px; background:var(--color-neutral-100); border:2px solid var(--color-neutral-600)">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <label style="font-size:17px; font-weight:700">Confirmation du mot de passe</label>
+          <input class="input" type="password" value="Soleil-2025" style="min-height:56px; font-size:18px; padding:0 20px; background:var(--color-neutral-100); border:2px solid var(--lvl-tres-eleve)">
+          <p style="margin:0; display:flex; gap:8px; color:var(--lvl-tres-eleve-fg); font-size:16px; font-weight:600"><svg style="flex:none; margin-top:2px" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="{{ ic.errCircle }}"></path></svg><span>Les mots de passe ne correspondent pas.</span></p>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px">
+        <div class="card" style="padding:28px; gap:12px">
+          <span style="width:52px; height:52px; border-radius:50%; background:var(--color-accent-100); color:var(--color-accent-700); display:grid; place-items:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="{{ ic.chart }}"></path></svg></span>
+          <span style="font-family:var(--font-heading); font-size:22px">Carte</span>
+          <p style="margin:0; font-size:17px; color:var(--color-neutral-800)">Fond sable, rayon 28 px, sans bordure.</p>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start; padding:16px 18px; border-radius:20px; background:var(--color-accent-100); border:2px solid var(--color-accent-300)">
+          <svg style="flex:none; color:var(--color-accent-700)" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="{{ ic.info }}"></path></svg>
+          <span style="font-size:16px"><strong>Alerte info.</strong> Avertissement médical.</span>
+        </div>
+        <div style="display:flex; gap:12px; align-items:flex-start; padding:16px 18px; border-radius:20px; background:var(--lvl-tres-eleve-bg); color:var(--lvl-tres-eleve-fg); border:2px solid var(--lvl-tres-eleve)">
+          <svg style="flex:none" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"><path d="{{ ic.errCircle }}"></path></svg>
+          <span style="font-size:16px; font-weight:700">Alerte erreur. Courriel ou mot de passe incorrect</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; gap:16px">
+    <h3 style="font-size:24px; margin:0">Seuils utilisés (mmol/L, à faire valider)</h3>
+    <div style="background:var(--color-neutral-100); border-radius:28px; padding:8px 24px; max-width:900px">
+      <table class="table" style="font-size:17px">
+        <thead><tr><th style="font-size:14px; padding:14px 8px">Moment</th><th style="font-size:14px; padding:14px 8px">Bas</th><th style="font-size:14px; padding:14px 8px">Normal</th><th style="font-size:14px; padding:14px 8px">Élevé</th><th style="font-size:14px; padding:14px 8px">Très élevé</th></tr></thead>
+        <tbody>
+          <tr><td style="padding:12px 8px; font-weight:700">À jeun</td><td style="padding:12px 8px">moins de 4.0</td><td style="padding:12px 8px">4.0 à 7.0</td><td style="padding:12px 8px">7.1 à 10.0</td><td style="padding:12px 8px">plus de 10.0</td></tr>
+          <tr><td style="padding:12px 8px; font-weight:700">1 h après le repas</td><td style="padding:12px 8px">moins de 4.0</td><td style="padding:12px 8px">4.0 à 10.0</td><td style="padding:12px 8px">10.1 à 13.9</td><td style="padding:12px 8px">plus de 13.9</td></tr>
+          <tr><td style="padding:12px 8px; font-weight:700">2 h après le repas</td><td style="padding:12px 8px">moins de 4.0</td><td style="padding:12px 8px">4.0 à 7.8</td><td style="padding:12px 8px">7.9 à 11.0</td><td style="padding:12px 8px">plus de 11.0</td></tr>
+          <tr><td style="padding:12px 8px; font-weight:700">4 h et plus</td><td style="padding:12px 8px">moins de 4.0</td><td style="padding:12px 8px">4.0 à 7.0</td><td style="padding:12px 8px">7.1 à 10.0</td><td style="padding:12px 8px">plus de 10.0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<sc-for list="{{ rows }}" as="row" hint-placeholder-count="3">
+  <section id="{{ row.anchor }}" data-screen-label="{{ row.title }}" style="display:flex; flex-direction:column; gap:24px">
+    <div style="display:flex; align-items:baseline; gap:16px">
+      <h2 style="font-size:36px; margin:0">{{ row.title }}</h2>
+      <span style="font-size:17px; color:var(--color-neutral-700)">{{ row.sub }}</span>
+    </div>
+    <div style="display:flex; gap:48px; align-items:flex-start">
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <span style="font-size:15px; font-weight:700; color:var(--color-neutral-700)">Mobile · 375 px</span>
+        <div style="width:375px; border-radius:36px; overflow:hidden; box-shadow:var(--shadow-lg); background:var(--color-bg)">
+          <dc-import name="GlycoSuivi" screen="{{ row.screen }}" etat="{{ row.etat }}" niveau="{{ row.niveau }}" device="mobile" min-h="812px" decimal="{{ decimal }}" logo="{{ logo }}" hint-size="375px,812px"></dc-import>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px">
+        <span style="font-size:15px; font-weight:700; color:var(--color-neutral-700)">Bureau · 1280 px</span>
+        <div style="width:1280px; border-radius:28px; overflow:hidden; box-shadow:var(--shadow-lg); background:var(--color-bg)">
+          <dc-import name="GlycoSuivi" screen="{{ row.screen }}" etat="{{ row.etat }}" niveau="{{ row.niveau }}" device="desktop" min-h="800px" decimal="{{ decimal }}" logo="{{ logo }}" hint-size="1280px,800px"></dc-import>
+        </div>
+      </div>
+    </div>
+  </section>
+</sc-for>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;decimal&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;.&quot;,&quot;,&quot;],&quot;default&quot;:&quot;.&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;logo&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;A&quot;,&quot;B&quot;,&quot;C&quot;],&quot;default&quot;:&quot;A&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const J = a => a.map(d => 'M0 0 ' + d).join(' ');
+const C = 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20';
+const IC = {
+  errCircle: J([C, 'M12 8v4', 'M12 16h.01']), info: J([C, 'M12 16v-4', 'M12 8h.01']),
+  chart: J(['M3 3v16a2 2 0 0 0 2 2h16', 'm19 9-5 5-4-4-3 3']),
+  down: J([C, 'M12 8v8', 'm8 12 4 4 4-4']), check: J([C, 'm9 12 2 2 4-4']), up: J([C, 'm16 12-4-4-4 4', 'M12 16V8']),
+  alert: J(['m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3', 'M12 9v4', 'M12 17h.01']),
+};
+const steps = (pre, ns) => ns.map(n => ({ n, v: `var(--color-${pre}-${n})` }));
+const N9 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+class Component extends DCLogic {
+  renderVals() {
+    const dec = this.props.decimal === ',' ? ',' : '.';
+    const rows = [
+      ['accueil', 'accueil', 'defaut', '', '1 · Accueil', 'Public'],
+      ['inscription', 'inscription', 'defaut', '', '2 · Inscription', 'État par défaut'],
+      ['', 'inscription', 'erreur', '', '2 · Inscription — erreur', 'Courriel déjà utilisé, mots de passe différents'],
+      ['connexion', 'connexion', 'defaut', '', '3 · Connexion', 'État par défaut'],
+      ['', 'connexion', 'erreur', '', '3 · Connexion — erreur', 'Courriel ou mot de passe incorrect'],
+      ['saisie', 'saisie', 'defaut', '', '4 · Saisie d\'une mesure', 'Connecté'],
+      ['', 'saisie', 'erreur', '', '4 · Saisie — erreur', 'Valeur hors plage, moment non choisi'],
+      ['resultat', 'resultat', 'defaut', 'bas', '5 · Résultat — Bas', '3.6 à jeun, règle du 15/15 en priorité'],
+      ['', 'resultat', 'defaut', 'normal', '5 · Résultat — Normal', '5.6 à jeun'],
+      ['', 'resultat', 'defaut', 'eleve', '5 · Résultat — Élevé', '8.4, 2 h après le repas'],
+      ['', 'resultat', 'defaut', 'tres-eleve', '5 · Résultat — Très élevé', '12.6, 2 h après le repas'],
+      ['historique', 'historique', 'defaut', '', '6 · Historique', 'Cartes sur mobile, tableau sur bureau'],
+      ['', 'historique', 'vide', '', '6 · Historique — vide', 'Aucune mesure'],
+    ].map(([anchor, screen, etat, niveau, title, sub]) => ({ anchor: anchor || undefined, screen, etat, niveau, title, sub: sub.replace(/(\d)\.(\d)/g, `$1${dec}$2`) }));
+    return {
+      ic: IC, rows, decimal: dec, logo: this.props.logo || 'A', sampleVal: `8${dec}4`,
+      ramps: [
+        { name: 'Principale · turquoise santé', steps: steps('accent', N9) },
+        { name: 'Second accent · sauge (Organic)', steps: steps('accent-2', N9) },
+        { name: 'Neutres chauds', steps: steps('neutral', N9) },
+      ],
+      levels: [
+        { label: 'Bas', icon: IC.down, fg: 'var(--lvl-bas-fg)', bg: 'var(--lvl-bas-bg)', solid: 'var(--lvl-bas)', hex: 'Violet · #6b4fc4 · texte #4a2f8e · fond #eee8fb' },
+        { label: 'Normal', icon: IC.check, fg: 'var(--lvl-normal-fg)', bg: 'var(--lvl-normal-bg)', solid: 'var(--lvl-normal)', hex: 'Vert · #5f8a3a · texte #38551f · fond #e6f2d6' },
+        { label: 'Élevé', icon: IC.up, fg: 'var(--lvl-eleve-fg)', bg: 'var(--lvl-eleve-bg)', solid: 'var(--lvl-eleve)', hex: 'Ambre · #d9822b · texte #8a4512 · fond #fde8d2' },
+        { label: 'Très élevé', icon: IC.alert, fg: 'var(--lvl-tres-eleve-fg)', bg: 'var(--lvl-tres-eleve-bg)', solid: 'var(--lvl-tres-eleve)', hex: 'Rouge · #c8372d · texte #97231b · fond #fbe1dc' },
+      ],
+      spaces: [4, 8, 12, 16, 24, 32, 48].map(n => ({ n, px: n + 'px' })),
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F4C093F2-4324-455F-8F27-B10B41DF8D8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GlycemieApi", "src\GlycemieApi\GlycemieApi.csproj", "{A0A20C1E-07D5-4957-9AFA-19A151372375}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F8EFE63F-E9B1-44A8-A36A-E1A4AA6280F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GlycemieApi.Tests", "tests\GlycemieApi.Tests\GlycemieApi.Tests.csproj", "{836C2669-DB23-4D94-B139-167537C9B7AF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0A20C1E-07D5-4957-9AFA-19A151372375}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0A20C1E-07D5-4957-9AFA-19A151372375}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0A20C1E-07D5-4957-9AFA-19A151372375}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0A20C1E-07D5-4957-9AFA-19A151372375}.Release|Any CPU.Build.0 = Release|Any CPU
+		{836C2669-DB23-4D94-B139-167537C9B7AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{836C2669-DB23-4D94-B139-167537C9B7AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{836C2669-DB23-4D94-B139-167537C9B7AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{836C2669-DB23-4D94-B139-167537C9B7AF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A0A20C1E-07D5-4957-9AFA-19A151372375} = {F4C093F2-4324-455F-8F27-B10B41DF8D8F}
+		{836C2669-DB23-4D94-B139-167537C9B7AF} = {F8EFE63F-E9B1-44A8-A36A-E1A4AA6280F4}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,21 @@
+<header class="topbar">
+  <a class="brand" routerLink="/">Glyco<span>Suivi</span></a>
+  <nav aria-label="Navigation principale">
+    @if (auth.isAuthenticated()) {
+      <a routerLink="/mesures/nouvelle" routerLinkActive="active">Nouvelle mesure</a>
+      <a routerLink="/historique" routerLinkActive="active">Historique</a>
+      <button type="button" class="btn-link" (click)="auth.logout()">Déconnexion</button>
+    } @else {
+      <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Accueil</a>
+      <a routerLink="/connexion" routerLinkActive="active">Connexion</a>
+      <a routerLink="/inscription" class="btn btn-primary btn-sm">Créer un compte</a>
+    }
+  </nav>
+</header>
+
+<main class="container">
+  @if (auth.user(); as user) {
+    <p class="greeting">Bonjour {{ user.firstName }}</p>
+  }
+  <router-outlet />
+</main>
