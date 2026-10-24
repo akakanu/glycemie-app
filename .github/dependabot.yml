@@ -1,9 +1,15 @@
 version: 2
+
+# Politique : uniquement les correctifs et versions mineures, regroupés par écosystème.
+# Les versions majeures (.NET 10, Angular 22, Node 24...) sont des migrations décidées et faites à la main.
 updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
     groups:
       actions:
         patterns: ["*"]
@@ -12,21 +18,38 @@ updates:
     directories: [/backend, /frontend]
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+      # Tag « 1.30-alpine » : il reçoit déjà les correctifs de la branche stable.
+      # Les versions mineures impaires (1.31, 1.33...) sont la branche mainline : on les ignore.
+      - dependency-name: nginxinc/nginx-unprivileged
+        update-types: [version-update:semver-minor]
+    groups:
+      docker:
+        patterns: ["*"]
 
   - package-ecosystem: nuget
     directory: /backend
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
     groups:
-      nuget-minor:
-        update-types: [minor, patch]
+      nuget:
+        patterns: ["*"]
 
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
     groups:
       angular:
         patterns: ["@angular/*", "@angular-devkit/*"]
-      npm-minor:
-        update-types: [minor, patch]
+      npm:
+        patterns: ["*"]
+        exclude-patterns: ["@angular/*", "@angular-devkit/*"]
