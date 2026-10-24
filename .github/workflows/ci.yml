@@ -1,0 +1,145 @@
+name: CI
+
+# Sur chaque PR : tests + construction et scan des images (rien n'est publié).
+# Sur main : idem, puis publication des images dans GitHub Container Registry.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  NG_CLI_ANALYTICS: "false"
+  TRIVY_IMAGE: aquasec/trivy:0.76.1
+
+jobs:
+  backend:
+    name: Backend (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Cache NuGet
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('backend/**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Tests
+        run: dotnet test backend -c Release --logger "console;verbosity=normal"
+
+  frontend:
+    name: Frontend (Angular)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci --no-audit --no-fund
+      - name: Tests
+        run: npx ng test --watch=false
+      - name: Build de production
+        run: npm run build
+
+  images:
+    name: Image ${{ matrix.name }}
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # utilisé seulement sur main, pour publier dans GHCR
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            context: backend
+          - name: web
+            context: frontend
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}/${{ matrix.name }}
+      PUBLISH: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Tags et labels
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=sha,prefix=sha-,format=short
+            type=raw,value=latest,enable=${{ env.PUBLISH }}
+
+      - name: Build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ matrix.context }}
+          load: true
+          push: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+
+      - name: Scan de vulnérabilités (Trivy)
+        # Échoue sur toute faille CRITIQUE pour laquelle un correctif existe.
+        env:
+          SCAN_TAG: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v "$HOME/.cache/trivy:/root/.cache/" \
+            "$TRIVY_IMAGE" image \
+            --exit-code 1 --severity CRITICAL --ignore-unfixed --no-progress \
+            "$SCAN_TAG"
+
+      - name: Connexion à GHCR
+        if: env.PUBLISH == 'true'
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publication
+        if: env.PUBLISH == 'true'
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          NAME: ${{ matrix.name }}
+        run: |
+          for tag in $TAGS; do
+            docker push "$tag"
+          done
+          echo "### Image $NAME publiée" >> "$GITHUB_STEP_SUMMARY"
+          printf -- '- `%s`\n' $TAGS >> "$GITHUB_STEP_SUMMARY"
