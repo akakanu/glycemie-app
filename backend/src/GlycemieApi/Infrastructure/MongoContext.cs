@@ -25,11 +25,13 @@ public class MongoContext
     {
         var settings = options.Value;
         var client = new MongoClient(settings.ConnectionString);
-        var database = client.GetDatabase(settings.DatabaseName);
+        Database = client.GetDatabase(settings.DatabaseName);
 
-        Users = database.GetCollection<User>("users");
-        Readings = database.GetCollection<Reading>("readings");
+        Users = Database.GetCollection<User>("users");
+        Readings = Database.GetCollection<Reading>("readings");
     }
+
+    public IMongoDatabase Database { get; }
 
     public IMongoCollection<User> Users { get; }
 

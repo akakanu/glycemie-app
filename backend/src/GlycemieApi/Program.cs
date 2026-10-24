@@ -1,13 +1,24 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using GlycemieApi.Health;
 using GlycemieApi.Infrastructure;
 using GlycemieApi.Services;
 using GlycemieApi.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// En production (Kubernetes), une ligne JSON par log : lisible par kubectl logs et les outils de collecte.
+if (!builder.Environment.IsDevelopment())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddJsonConsole();
+}
 
 // --- Configuration (les secrets viennent des user-secrets en développement) ---
 builder.Services.AddOptions<MongoSettings>()
@@ -24,16 +35,33 @@ builder.Services.AddOptions<JwtSettings>()
 builder.Services.AddSingleton<MongoContext>();
 builder.Services.AddHostedService<MongoIndexInitializer>();
 
+// --- Santé : /health/live (le processus répond) et /health/ready (MongoDB joignable) ---
+builder.Services.AddHealthChecks()
+    .AddCheck<MongoHealthCheck>("mongo", tags: ["ready"]);
+
+// --- Derrière l'ingress Kubernetes : le TLS est terminé en amont ---
+// On fait confiance aux en-têtes X-Forwarded-* pour connaître le schéma (https) et l'IP du client.
+// L'IP de l'ingress n'est pas connue à l'avance : seul le trafic interne au cluster atteint le pod.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 // --- Services métier ---
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ReadingService>();
 builder.Services.AddSingleton<TokenService>();
 
 // --- Authentification JWT ---
-var jwt = builder.Configuration.GetSection(JwtSettings.SectionName).Get<JwtSettings>() ?? new JwtSettings();
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+// Les paramètres sont construits à partir des JwtSettings validés, au moment où ils servent :
+// toute la configuration (user-secrets, variables d'environnement, Key Vault) est alors chargée.
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtSettings>>((options, jwtOptions) =>
     {
+        var jwt = jwtOptions.Value;
         // Garde les noms de claims d'origine ("sub" plutôt que l'URI NameIdentifier).
         options.MapInboundClaims = false;
         options.TokenValidationParameters = new TokenValidationParameters
@@ -84,6 +112,8 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+app.UseForwardedHeaders();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -91,15 +121,17 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    // En développement, le frontend appelle l'API en http : une redirection casserait les requêtes CORS.
+    // Pas de UseHttpsRedirection ni de UseHsts : l'ingress termine le TLS et gère HSTS.
+    // Une redirection ici bouclerait, car le pod ne reçoit que du http.
     app.UseExceptionHandler();
-    app.UseHsts();
-    app.UseHttpsRedirection();
 }
 
 app.UseCors(FrontendCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false }).AllowAnonymous();
+app.MapHealthChecks("/health/ready", new HealthCheckOptions { Predicate = c => c.Tags.Contains("ready") }).AllowAnonymous();
 
 app.MapControllers();
 
