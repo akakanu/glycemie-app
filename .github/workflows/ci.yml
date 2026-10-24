@@ -99,12 +99,13 @@ jobs:
           kubectl kustomize k8s/app \
             | envsubst '${IMAGE_TAG} ${HOST} ${CLUSTER_ISSUER} ${API_CLIENT_ID} ${KEYVAULT_NAME} ${TENANT_ID}' \
             > app.yaml
+          # shellcheck disable=SC2016 # recherche du texte littéral ${ (variable oubliée)
           if grep -n '\${' app.yaml; then echo "Variable non remplacée" && exit 1; fi
 
       - name: Rendu de la plateforme
         run: |
-          # shellcheck disable=SC2016 # ${...} volontairement entre apostrophes : envsubst le remplace
           set -a; source k8s/platform/versions.env; set +a
+          # shellcheck disable=SC2016 # ${...} volontairement entre apostrophes : envsubst le remplace
           envsubst '${LETSENCRYPT_EMAIL}' < k8s/platform/cluster-issuers.yaml > issuers.yaml
           # helm template valide aussi les valeurs contre le schéma JSON des charts.
           helm template traefik traefik --repo https://traefik.github.io/charts \
