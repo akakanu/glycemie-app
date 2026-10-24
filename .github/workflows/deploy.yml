@@ -1,0 +1,93 @@
+name: deploy
+
+# Après chaque CI verte sur main : redéploie les nouvelles images, SI l'environnement est allumé.
+# Si le déploiement échoue, revient automatiquement à la version précédente.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: azure-env
+  cancel-in-progress: false
+
+env:
+  RESOURCE_GROUP: rg-glycosuivi-prod
+  CLUSTER: aks-glycosuivi
+  HOST: glycosuivi.canadaeast.cloudapp.azure.com
+  KEYVAULT_NAME: ${{ vars.KEYVAULT_NAME }}
+  API_CLIENT_ID: ${{ vars.API_CLIENT_ID }}
+  TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+
+jobs:
+  deploy:
+    name: Redéployer
+    # Uniquement après un push sur main dont la CI a réussi (pas après une PR).
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Connexion à Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: L'environnement est-il allumé ?
+        id: cluster
+        run: |
+          if az aks show -g "$RESOURCE_GROUP" -n "$CLUSTER" --query name -o tsv > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Environnement éteint : rien à déployer." | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Préparer le déploiement
+        if: steps.cluster.outputs.exists == 'true'
+        env:
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          az aks get-credentials --admin -g "$RESOURCE_GROUP" -n "$CLUSTER" --overwrite-existing
+          echo "IMAGE_TAG=sha-${HEAD_SHA::7}" >> "$GITHUB_ENV"
+          # On garde l'émetteur choisi par env-up : en changer redemanderait un certificat.
+          issuer=$(kubectl get gateway glycosuivi -n glycosuivi \
+            -o jsonpath='{.metadata.annotations.cert-manager\.io/cluster-issuer}')
+          echo "CLUSTER_ISSUER=${issuer:-letsencrypt-prod}" >> "$GITHUB_ENV"
+
+      - name: Déployer
+        id: deploy
+        if: steps.cluster.outputs.exists == 'true'
+        run: scripts/deploy-app.sh
+
+      - name: Tests de fumée
+        if: steps.cluster.outputs.exists == 'true'
+        env:
+          INSECURE: ${{ env.CLUSTER_ISSUER == 'letsencrypt-staging' }}
+        run: scripts/smoke-test.sh
+
+      - name: Retour à la version précédente
+        if: failure() && steps.cluster.outputs.exists == 'true'
+        run: |
+          scripts/diagnose.sh || true
+          kubectl rollout undo deployment/api -n glycosuivi
+          kubectl rollout undo deployment/web -n glycosuivi
+          kubectl rollout status deployment/api -n glycosuivi --timeout=5m
+          kubectl rollout status deployment/web -n glycosuivi --timeout=5m
+          echo "## Déploiement annulé : retour à la version précédente" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Résumé
+        if: success() && steps.cluster.outputs.exists == 'true'
+        run: echo "## ${IMAGE_TAG} déployé sur https://${HOST}" >> "$GITHUB_STEP_SUMMARY"

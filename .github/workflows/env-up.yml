@@ -1,0 +1,137 @@
+name: env-up
+
+# Crée l'environnement de production éphémère et y déploie l'application.
+# À lancer au début d'une session de travail. Penser à lancer env-down à la fin
+# (sinon, env-down tourne automatiquement chaque nuit).
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Tag des images à déployer (vide = dernier commit de main, ex. sha-1a2b3c4)"
+        required: false
+        default: ""
+      tls:
+        description: "Émetteur du certificat (staging pour la mise au point : non reconnu par les navigateurs)"
+        type: choice
+        options: [prod, staging]
+        default: prod
+
+permissions:
+  id-token: write # jeton OIDC échangé contre un accès Azure, sans secret
+  contents: read
+
+# Jamais deux opérations sur l'environnement en même temps (env-up, env-down, deploy).
+concurrency:
+  group: azure-env
+  cancel-in-progress: false
+
+env:
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC: "true"
+  TF_IN_AUTOMATION: "true"
+  RESOURCE_GROUP: rg-glycosuivi-prod
+  CLUSTER: aks-glycosuivi
+  HOST: glycosuivi.canadaeast.cloudapp.azure.com
+  KEYVAULT_NAME: ${{ vars.KEYVAULT_NAME }}
+  API_CLIENT_ID: ${{ vars.API_CLIENT_ID }}
+  TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  LETSENCRYPT_EMAIL: ${{ vars.LETSENCRYPT_EMAIL }}
+  CLUSTER_ISSUER: letsencrypt-${{ inputs.tls }}
+
+jobs:
+  up:
+    name: Créer et déployer
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Tag d'image à déployer
+        env:
+          INPUT_TAG: ${{ inputs.image_tag }}
+        run: |
+          tag="${INPUT_TAG:-sha-$(git rev-parse --short=7 HEAD)}"
+          echo "IMAGE_TAG=$tag" >> "$GITHUB_ENV"
+          # Échec rapide si les images n'existent pas dans GHCR (avant de créer quoi que ce soit dans Azure).
+          for image in api web; do
+            token=$(curl -fsS "https://ghcr.io/token?scope=repository:${GITHUB_REPOSITORY}/${image}:pull" | jq -r .token)
+            curl -fsS -o /dev/null -H "Authorization: Bearer $token" \
+              -H "Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.v2+json" \
+              "https://ghcr.io/v2/${GITHUB_REPOSITORY}/${image}/manifests/${tag}" \
+              || { echo "::error::Image ghcr.io/${GITHUB_REPOSITORY}/${image}:${tag} introuvable"; exit 1; }
+          done
+          echo "Images ${tag} présentes dans GHCR."
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "~1.15"
+          terraform_wrapper: false
+
+      - name: Connexion à Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Créer le cluster AKS (Terraform)
+        working-directory: infra/terraform/env
+        run: |
+          terraform init -input=false \
+            -backend-config="resource_group_name=${{ vars.TFSTATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ vars.TFSTATE_STORAGE_ACCOUNT }}"
+          terraform apply -input=false -auto-approve
+
+      - name: Accès au cluster
+        run: az aks get-credentials --admin -g "$RESOURCE_GROUP" -n "$CLUSTER" --overwrite-existing
+
+      - name: Plateforme (Gateway API, Traefik, cert-manager)
+        run: scripts/platform-install.sh
+
+      - name: Namespace et restauration du certificat
+        run: |
+          kubectl apply -f k8s/app/namespace.yaml
+          scripts/tls-restore.sh
+
+      - name: Autoriser le cluster dans MongoDB Atlas
+        env:
+          ATLAS_CLIENT_ID: ${{ secrets.ATLAS_CLIENT_ID }}
+          ATLAS_CLIENT_SECRET: ${{ secrets.ATLAS_CLIENT_SECRET }}
+          ATLAS_PROJECT_ID: ${{ vars.ATLAS_PROJECT_ID }}
+        run: |
+          ip=$(scripts/egress-ip.sh)
+          echo "IP de sortie du cluster : $ip"
+          scripts/atlas-access.sh add "$ip"
+
+      - name: Déployer l'application
+        run: scripts/deploy-app.sh
+
+      - name: Attendre le certificat HTTPS
+        run: kubectl wait certificate/glycosuivi-tls -n glycosuivi --for=condition=Ready --timeout=6m
+
+      - name: Tests de fumée
+        env:
+          INSECURE: ${{ inputs.tls == 'staging' }}
+        run: scripts/smoke-test.sh
+
+      - name: Résumé
+        if: success()
+        run: |
+          {
+            echo "## Environnement prêt"
+            echo "- URL : https://${HOST}"
+            echo "- Images : \`${IMAGE_TAG}\`"
+            echo "- Certificat : \`${CLUSTER_ISSUER}\`"
+            echo "- Kubernetes : $(kubectl version -o json | jq -r .serverVersion.gitVersion)"
+            echo ""
+            echo "> ⚠️ Pense à lancer **env-down** à la fin de la session (sinon : destruction automatique à 3 h)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Diagnostic en cas d'échec
+        if: failure()
+        run: scripts/diagnose.sh || true

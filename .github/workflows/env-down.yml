@@ -1,0 +1,95 @@
+name: env-down
+
+# Détruit l'environnement éphémère. Idempotent : sans effet si rien n'existe.
+# Tourne aussi chaque nuit, comme filet de sécurité contre un oubli.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 7 * * *" # 7 h UTC = 3 h à Québec (heure d'été), 2 h (heure normale)
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: azure-env
+  cancel-in-progress: false
+
+env:
+  ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+  ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+  ARM_USE_OIDC: "true"
+  TF_IN_AUTOMATION: "true"
+  RESOURCE_GROUP: rg-glycosuivi-prod
+  CLUSTER: aks-glycosuivi
+  KEYVAULT_NAME: ${{ vars.KEYVAULT_NAME }}
+
+jobs:
+  down:
+    name: Détruire
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: "~1.15"
+          terraform_wrapper: false
+
+      - name: Connexion à Azure (OIDC)
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Le cluster existe-t-il ?
+        id: cluster
+        run: |
+          if az aks show -g "$RESOURCE_GROUP" -n "$CLUSTER" --query name -o tsv > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Cluster présent : destruction."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Aucun cluster : vérification et nettoyage seulement."
+          fi
+
+      - name: Sauvegarder le certificat HTTPS
+        if: steps.cluster.outputs.exists == 'true'
+        # Une sauvegarde ratée ne doit jamais empêcher la destruction (risque de coûts).
+        continue-on-error: true
+        run: |
+          az aks get-credentials --admin -g "$RESOURCE_GROUP" -n "$CLUSTER" --overwrite-existing
+          scripts/tls-backup.sh
+
+      - name: Retirer le cluster de MongoDB Atlas
+        continue-on-error: true # l'entrée expire de toute façon après 24 h
+        env:
+          ATLAS_CLIENT_ID: ${{ secrets.ATLAS_CLIENT_ID }}
+          ATLAS_CLIENT_SECRET: ${{ secrets.ATLAS_CLIENT_SECRET }}
+          ATLAS_PROJECT_ID: ${{ vars.ATLAS_PROJECT_ID }}
+        run: scripts/atlas-access.sh remove
+
+      - name: Détruire (Terraform)
+        working-directory: infra/terraform/env
+        run: |
+          terraform init -input=false \
+            -backend-config="resource_group_name=${{ vars.TFSTATE_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ vars.TFSTATE_STORAGE_ACCOUNT }}"
+          terraform destroy -input=false -auto-approve
+
+      - name: Contrôle final (groupe vide)
+        run: |
+          remaining=$(az resource list -g "$RESOURCE_GROUP" --query "[].{nom:name, type:type}" -o tsv)
+          if [[ -n "$remaining" ]]; then
+            echo "::error::Ressources encore présentes dans ${RESOURCE_GROUP} (elles coûtent) :"
+            echo "$remaining"
+            exit 1
+          fi
+          echo "## Environnement détruit" >> "$GITHUB_STEP_SUMMARY"
+          echo "${RESOURCE_GROUP} est vide : plus aucun coût lié au cluster." | tee -a "$GITHUB_STEP_SUMMARY"
