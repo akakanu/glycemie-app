@@ -10,6 +10,18 @@ variable "github_repository" {
   default     = "akakanu/glycemie-app"
 }
 
+variable "github_owner_id" {
+  description = "Identifiant numérique du propriétaire du dépôt (GET /repos/{owner}/{repo} > owner.id)."
+  type        = number
+  default     = 74557945
+}
+
+variable "github_repository_id" {
+  description = "Identifiant numérique du dépôt (GET /repos/{owner}/{repo} > id)."
+  type        = number
+  default     = 1409058393
+}
+
 variable "alert_email" {
   description = "Courriel des alertes de budget. Passé en variable d'environnement (TF_VAR_alert_email), jamais commité."
   type        = string

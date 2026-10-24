@@ -29,6 +29,13 @@ resource "azurerm_user_assigned_identity" "api" {
 locals {
   github_issuer   = "https://token.actions.githubusercontent.com"
   github_audience = ["api://AzureADTokenExchange"]
+
+  # Format « immuable » des jetons GitHub (use_immutable_subject) : il inclut les identifiants numériques
+  # du propriétaire et du dépôt. Un dépôt supprimé puis recréé sous le même nom n'hérite donc pas des accès.
+  # Ex. repo:akakanu@74557945/glycemie-app@1409058393:environment:production
+  github_owner          = split("/", var.github_repository)[0]
+  github_repo           = split("/", var.github_repository)[1]
+  github_subject_prefix = "repo:${local.github_owner}@${var.github_owner_id}/${local.github_repo}@${var.github_repository_id}"
 }
 
 # Workflows qui ciblent l'environnement GitHub « production » (env-up, env-down, deploy).
@@ -37,7 +44,7 @@ resource "azurerm_federated_identity_credential" "github_production" {
   user_assigned_identity_id = azurerm_user_assigned_identity.github.id
   issuer                    = local.github_issuer
   audience                  = local.github_audience
-  subject                   = "repo:${var.github_repository}:environment:production"
+  subject                   = "${local.github_subject_prefix}:environment:production"
 }
 
 # Pull requests : identité en lecture seule uniquement.
@@ -46,5 +53,5 @@ resource "azurerm_federated_identity_credential" "plan_pull_request" {
   user_assigned_identity_id = azurerm_user_assigned_identity.plan.id
   issuer                    = local.github_issuer
   audience                  = local.github_audience
-  subject                   = "repo:${var.github_repository}:pull_request"
+  subject                   = "${local.github_subject_prefix}:pull_request"
 }
