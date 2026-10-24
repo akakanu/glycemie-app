@@ -1,5 +1,5 @@
 # --- Compilation ---
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Restauration séparée : la couche reste en cache tant que le .csproj ne change pas.
