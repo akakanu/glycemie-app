@@ -1,0 +1,51 @@
+# Valeurs Helm de Traefik (chart traefik/traefik 42.1.3, Traefik 3.7).
+# Traefik implémente Gateway API : les routes sont décrites dans k8s/app/gateway.yaml.
+# Les CRD Gateway API (v1.6.3, canal standard) sont installées avant ce chart par le workflow.
+
+deployment:
+  replicas: 1
+
+providers:
+  kubernetesGateway:
+    enabled: true
+  # Ni IngressRoute ni Ingress : uniquement Gateway API.
+  kubernetesCRD:
+    enabled: false
+  kubernetesIngress:
+    enabled: false
+
+# Le Gateway applicatif est défini avec l'application (namespace glycosuivi).
+gateway:
+  enabled: false
+
+gatewayClass:
+  enabled: true
+  name: traefik
+
+# Pas d'IngressClass : seul Gateway API est utilisé.
+ingressClass:
+  enabled: false
+
+# Pas de tableau de bord, ni exposé ni interne.
+api:
+  dashboard: false
+ingressRoute:
+  dashboard:
+    enabled: false
+
+service:
+  annotations:
+    # Nom DNS public stable, même si l'IP change à chaque session :
+    # glycosuivi.canadaeast.cloudapp.azure.com
+    service.beta.kubernetes.io/azure-dns-label-name: glycosuivi
+
+accessLog:
+  enabled: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 64Mi
+  limits:
+    cpu: 500m
+    memory: 192Mi

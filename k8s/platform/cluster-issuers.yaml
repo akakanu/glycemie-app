@@ -1,0 +1,40 @@
+# Émetteurs Let's Encrypt. ${LETSENCRYPT_EMAIL} est remplacé par le workflow (envsubst).
+# Défi HTTP-01 servi par le listener http (port 80) du Gateway applicatif.
+# « staging » : certificats non reconnus par les navigateurs, mais quotas très larges, pour la mise au point.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: ${LETSENCRYPT_EMAIL}
+    privateKeySecretRef:
+      name: letsencrypt-staging-account
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - kind: Gateway
+                name: glycosuivi
+                namespace: glycosuivi
+                sectionName: web
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: ${LETSENCRYPT_EMAIL}
+    privateKeySecretRef:
+      name: letsencrypt-prod-account
+    solvers:
+      - http01:
+          gatewayHTTPRoute:
+            parentRefs:
+              - kind: Gateway
+                name: glycosuivi
+                namespace: glycosuivi
+                sectionName: web

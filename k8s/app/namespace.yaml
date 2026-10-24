@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: glycosuivi
+  labels:
+    # Pod Security Admission : profil le plus strict (non root, pas de privilèges...).
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: latest
