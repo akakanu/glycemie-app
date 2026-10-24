@@ -18,6 +18,17 @@ node_modules/
 dist/
 .angular/
 
+# --- Terraform ---
+# L'état contient des identifiants d'infrastructure : jamais dans git.
+# Le fichier de verrouillage .terraform.lock.hcl, lui, est commité.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfplan
+crash.log
+backend.tf
+
 # --- Éditeurs et système ---
 .vscode/
 .idea/

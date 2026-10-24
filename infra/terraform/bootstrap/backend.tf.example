@@ -1,0 +1,12 @@
+# Après le premier apply (état local), copier ce fichier en backend.tf,
+# remplacer <compte> par la sortie tfstate_storage_account, puis :
+#   terraform init -migrate-state
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-glycosuivi-shared"
+    storage_account_name = "<compte>"
+    container_name       = "tfstate"
+    key                  = "bootstrap.tfstate"
+    use_azuread_auth     = true
+  }
+}
