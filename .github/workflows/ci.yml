@@ -95,6 +95,7 @@ jobs:
 
       - name: Rendu de l'application
         run: |
+          # shellcheck disable=SC2016 # ${...} volontairement entre apostrophes : envsubst les remplace
           kubectl kustomize k8s/app \
             | envsubst '${IMAGE_TAG} ${HOST} ${CLUSTER_ISSUER} ${API_CLIENT_ID} ${KEYVAULT_NAME} ${TENANT_ID}' \
             > app.yaml
@@ -102,6 +103,7 @@ jobs:
 
       - name: Rendu de la plateforme
         run: |
+          # shellcheck disable=SC2016 # ${...} volontairement entre apostrophes : envsubst le remplace
           set -a; source k8s/platform/versions.env; set +a
           envsubst '${LETSENCRYPT_EMAIL}' < k8s/platform/cluster-issuers.yaml > issuers.yaml
           # helm template valide aussi les valeurs contre le schéma JSON des charts.
@@ -230,8 +232,10 @@ jobs:
           TAGS: ${{ steps.meta.outputs.tags }}
           NAME: ${{ matrix.name }}
         run: |
-          for tag in $TAGS; do
-            docker push "$tag"
-          done
           echo "### Image $NAME publiée" >> "$GITHUB_STEP_SUMMARY"
-          printf -- '- `%s`\n' $TAGS >> "$GITHUB_STEP_SUMMARY"
+          # Un tag par ligne dans la sortie de metadata-action.
+          while read -r tag; do
+            [[ -z "$tag" ]] && continue
+            docker push "$tag"
+            echo "- $tag" >> "$GITHUB_STEP_SUMMARY"
+          done <<< "$TAGS"
