@@ -100,8 +100,8 @@ jobs:
 
       - name: Autoriser le cluster dans MongoDB Atlas
         env:
-          ATLAS_CLIENT_ID: ${{ secrets.ATLAS_CLIENT_ID }}
-          ATLAS_CLIENT_SECRET: ${{ secrets.ATLAS_CLIENT_SECRET }}
+          ATLAS_PUBLIC_KEY: ${{ secrets.ATLAS_PUBLIC_KEY }}
+          ATLAS_PRIVATE_KEY: ${{ secrets.ATLAS_PRIVATE_KEY }}
           ATLAS_PROJECT_ID: ${{ vars.ATLAS_PROJECT_ID }}
         run: |
           ip=$(scripts/egress-ip.sh)
