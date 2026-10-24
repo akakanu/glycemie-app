@@ -17,6 +17,7 @@ trap 'rm -f "$rendered"' EXIT
 readonly VARIABLES='${IMAGE_TAG} ${HOST} ${CLUSTER_ISSUER} ${API_CLIENT_ID} ${KEYVAULT_NAME} ${TENANT_ID}'
 kubectl kustomize k8s/app | envsubst "$VARIABLES" > "$rendered"
 
+# shellcheck disable=SC2016 # on cherche le texte littéral ${ (variable oubliée)
 if grep -n '\${' "$rendered"; then
   echo "Variable non remplacée dans les manifestes." >&2
   exit 1
