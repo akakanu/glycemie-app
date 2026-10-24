@@ -5,7 +5,8 @@
 #   scripts/atlas-access.sh remove       retire toutes les entrées créées par ce script (idempotent)
 #
 # Variables requises : ATLAS_CLIENT_ID, ATLAS_CLIENT_SECRET (compte de service), ATLAS_PROJECT_ID.
-# Rôle Atlas requis pour le compte de service : Project IP Access List Admin.
+# Rôle Atlas requis pour le compte de service, sur le projet : Project Network Access Manager
+# (GROUP_NETWORK_ACCESS_MANAGER), le plus restreint qui permet de gérer la liste d'accès IP.
 set -euo pipefail
 
 : "${ATLAS_CLIENT_ID:?ATLAS_CLIENT_ID manquant}"
