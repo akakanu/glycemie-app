@@ -1,0 +1,90 @@
+# Point d'entrée public (Gateway API, implémenté par Traefik).
+# ${HOST} et ${CLUSTER_ISSUER} sont remplacés par le workflow.
+# cert-manager lit l'annotation et crée le certificat glycosuivi-tls pour le listener https.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: glycosuivi
+  annotations:
+    cert-manager.io/cluster-issuer: ${CLUSTER_ISSUER}
+spec:
+  gatewayClassName: traefik
+  listeners:
+    # Les ports sont ceux des entrypoints Traefik (8000 et 8443), exposés en 80 et 443.
+    - name: web
+      protocol: HTTP
+      port: 8000
+      hostname: ${HOST}
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: websecure
+      protocol: HTTPS
+      port: 8443
+      hostname: ${HOST}
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - kind: Secret
+            name: glycosuivi-tls
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+# HTTPS : /api vers l'API, tout le reste vers le frontend.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: glycosuivi
+spec:
+  parentRefs:
+    - name: glycosuivi
+      sectionName: websecure
+  hostnames:
+    - ${HOST}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /api
+      filters:
+        - type: ResponseHeaderModifier
+          responseHeaderModifier:
+            set:
+              - name: Strict-Transport-Security
+                value: max-age=31536000
+      backendRefs:
+        - name: api
+          port: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        - type: ResponseHeaderModifier
+          responseHeaderModifier:
+            set:
+              - name: Strict-Transport-Security
+                value: max-age=31536000
+      backendRefs:
+        - name: web
+          port: 80
+---
+# HTTP : redirection permanente vers HTTPS.
+# Le défi Let's Encrypt (/.well-known/acme-challenge/...) a sa propre route, plus précise, et reste servi en http.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: glycosuivi-redirect-https
+spec:
+  parentRefs:
+    - name: glycosuivi
+      sectionName: web
+  hostnames:
+    - ${HOST}
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
