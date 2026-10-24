@@ -1,5 +1,5 @@
 # --- Compilation ---
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 
 # Installation séparée : la couche reste en cache tant que les dépendances ne changent pas.
