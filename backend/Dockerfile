@@ -11,7 +11,7 @@ RUN dotnet publish src/GlycemieApi -c Release -o /app --no-restore /p:UseAppHost
 
 # --- Exécution ---
 # Image « chiseled » : ni shell ni gestionnaire de paquets, utilisateur non root par défaut.
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-noble-chiseled AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled AS runtime
 WORKDIR /app
 COPY --from=build /app .
 
