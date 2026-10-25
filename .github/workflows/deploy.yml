@@ -45,14 +45,24 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: L'environnement est-il allumé ?
+      # On ne redéploie que si env-up est allé au bout : cluster présent ET application déjà déployée.
+      # (Pendant un env-up en cours ou après un env-up raté, le cluster existe mais pas l'application.)
+      - name: L'application est-elle déployée ?
         id: cluster
         run: |
-          if az aks show -g "$RESOURCE_GROUP" -n "$CLUSTER" --query name -o tsv > /dev/null 2>&1; then
+          if ! az aks show -g "$RESOURCE_GROUP" -n "$CLUSTER" --query name -o tsv > /dev/null 2>&1; then
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Environnement éteint : rien à déployer." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          az aks get-credentials --admin -g "$RESOURCE_GROUP" -n "$CLUSTER" --overwrite-existing
+          if kubectl get deployment api -n glycosuivi > /dev/null 2>&1 \
+            && kubectl get gateway glycosuivi -n glycosuivi > /dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Environnement éteint : rien à déployer." | tee -a "$GITHUB_STEP_SUMMARY"
+            echo "Cluster présent mais application pas encore déployée (env-up en cours ou incomplet) : rien à faire." \
+              | tee -a "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Préparer le déploiement
@@ -60,12 +70,11 @@ jobs:
         env:
           HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          az aks get-credentials --admin -g "$RESOURCE_GROUP" -n "$CLUSTER" --overwrite-existing
           echo "IMAGE_TAG=sha-${HEAD_SHA::7}" >> "$GITHUB_ENV"
           # On garde l'émetteur choisi par env-up : en changer redemanderait un certificat.
           issuer=$(kubectl get gateway glycosuivi -n glycosuivi \
             -o jsonpath='{.metadata.annotations.cert-manager\.io/cluster-issuer}')
-          echo "CLUSTER_ISSUER=${issuer:-letsencrypt-prod}" >> "$GITHUB_ENV"
+          echo "CLUSTER_ISSUER=${issuer}" >> "$GITHUB_ENV"
 
       - name: Déployer
         id: deploy
@@ -79,7 +88,8 @@ jobs:
         run: scripts/smoke-test.sh
 
       - name: Retour à la version précédente
-        if: failure() && steps.cluster.outputs.exists == 'true'
+        # Seulement si l'application a réellement été (re)déployée par ce workflow.
+        if: failure() && steps.deploy.outcome != 'skipped' && steps.cluster.outputs.exists == 'true'
         run: |
           scripts/diagnose.sh || true
           kubectl rollout undo deployment/api -n glycosuivi
