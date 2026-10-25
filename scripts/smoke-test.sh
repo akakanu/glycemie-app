@@ -24,18 +24,30 @@ check() {
 page=$(mktemp)
 trap 'rm -f "$page"' EXIT
 
-code=$(curl "${opts[@]}" -o "$page" -w '%{http_code}' "https://${HOST}/")
+# Juste après l'émission d'un certificat, Traefik met quelques secondes à charger les routes HTTPS
+# et répond 404 en attendant. On réessaie donc jusqu'au code attendu (2 minutes au plus).
+status_until() {
+  local expected=$1 url=$2 output=${3:-/dev/null} code=""
+  for _ in $(seq 1 24); do
+    code=$(curl "${opts[@]}" -o "$output" -w '%{http_code}' "$url" || true)
+    [[ "$code" == "$expected" ]] && break
+    sleep 5
+  done
+  echo "$code"
+}
+
+code=$(status_until 200 "https://${HOST}/" "$page")
 check "Accueil (https)" 200 "$code"
 if grep -q "GlycoSuivi" "$page"; then echo "OK    Page servie par l'application"; else
   echo "ÉCHEC La page d'accueil ne contient pas « GlycoSuivi »" >&2
   failures=$((failures + 1))
 fi
 
-code=$(curl "${opts[@]}" -o /dev/null -w '%{http_code}' "https://${HOST}/historique")
+code=$(status_until 200 "https://${HOST}/historique")
 check "Route Angular /historique" 200 "$code"
 
 # L'API répond et protège ses routes (la santé interne est couverte par la readiness probe).
-code=$(curl "${opts[@]}" -o /dev/null -w '%{http_code}' "https://${HOST}/api/readings")
+code=$(status_until 401 "https://${HOST}/api/readings")
 check "API protégée /api/readings" 401 "$code"
 
 redirect=$(curl -sS --max-time 15 -o /dev/null -w '%{http_code} %{redirect_url}' "http://${HOST}/")
