@@ -85,7 +85,14 @@ jobs:
 
       - name: Contrôle final (groupe vide)
         run: |
-          remaining=$(az resource list -g "$RESOURCE_GROUP" --query "[].{nom:name, type:type}" -o tsv)
+          # L'index des ressources Azure se met à jour un peu après une suppression :
+          # on réessaie pendant 3 minutes avant de conclure qu'il reste quelque chose.
+          for attempt in $(seq 1 18); do
+            remaining=$(az resource list -g "$RESOURCE_GROUP" --query "[].{nom:name, type:type}" -o tsv)
+            [[ -z "$remaining" ]] && break
+            echo "Tentative ${attempt}/18 : encore listé, nouvelle vérification dans 10 s."
+            sleep 10
+          done
           if [[ -n "$remaining" ]]; then
             echo "::error::Ressources encore présentes dans ${RESOURCE_GROUP} (elles coûtent) :"
             echo "$remaining"

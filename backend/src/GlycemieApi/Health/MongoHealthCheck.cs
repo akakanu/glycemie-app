@@ -6,12 +6,23 @@ using MongoDB.Driver;
 namespace GlycemieApi.Health;
 
 /// <summary>
-/// Vérifie que MongoDB répond (commande ping). Utilisé par la sonde readiness de Kubernetes :
-/// un pod qui ne joint plus la base ne reçoit plus de trafic.
+/// Vérifie que MongoDB répond ET que l'API y est authentifiée. Utilisé par la sonde readiness de
+/// Kubernetes : un pod qui ne peut pas réellement utiliser la base ne reçoit pas de trafic.
 /// </summary>
+/// <remarks>
+/// Pas de « ping » : MongoDB l'accepte sans authentification, la sonde réussirait donc avec un mauvais
+/// mot de passe. listCollections exige une connexion authentifiée et un droit de lecture sur la base.
+/// </remarks>
 public class MongoHealthCheck(MongoContext context) : IHealthCheck
 {
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(3);
+
+    private static readonly BsonDocument AuthenticatedCommand = new()
+    {
+        { "listCollections", 1 },
+        { "nameOnly", true },
+        { "authorizedCollections", true },
+    };
 
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext healthContext, CancellationToken cancellationToken = default)
     {
@@ -20,7 +31,7 @@ public class MongoHealthCheck(MongoContext context) : IHealthCheck
 
         try
         {
-            await context.Database.RunCommandAsync<BsonDocument>(new BsonDocument("ping", 1), cancellationToken: cts.Token);
+            await context.Database.RunCommandAsync<BsonDocument>(AuthenticatedCommand, cancellationToken: cts.Token);
             return HealthCheckResult.Healthy();
         }
         catch (Exception ex)

@@ -16,9 +16,18 @@ if ! kubectl get secret "$SECRET" -n "$NAMESPACE" > /dev/null 2>&1; then
   exit 0
 fi
 
-if ! kubectl get secret "$SECRET" -n "$NAMESPACE" -o jsonpath='{.data.tls\.crt}' | base64 -d \
-  | openssl x509 -noout -checkend "$MIN_VALIDITY" > /dev/null 2>&1; then
-  echo "Certificat absent, invalide ou expirant dans moins de 7 jours : pas de sauvegarde."
+crt=$(kubectl get secret "$SECRET" -n "$NAMESPACE" -o jsonpath='{.data.tls\.crt}' | base64 -d || true)
+if [[ -z "$crt" ]]; then
+  echo "Le Secret ${SECRET} ne contient pas de certificat (tls.crt vide) : pas de sauvegarde."
+  exit 0
+fi
+if ! not_after=$(openssl x509 -noout -enddate <<< "$crt" 2> /dev/null); then
+  echo "Certificat illisible par openssl : pas de sauvegarde."
+  exit 0
+fi
+echo "Certificat lu : ${not_after}"
+if ! openssl x509 -noout -checkend "$MIN_VALIDITY" <<< "$crt" > /dev/null; then
+  echo "Certificat expirant dans moins de 7 jours : pas de sauvegarde."
   exit 0
 fi
 
