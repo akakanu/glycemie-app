@@ -1,4 +1,8 @@
-# Glycémie App (MVP)
+# GlycoSuivi (Glycémie App, MVP)
+
+[![CI](https://github.com/akakanu/glycemie-app/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/akakanu/glycemie-app/actions/workflows/ci.yml)
+[![deploy](https://github.com/akakanu/glycemie-app/actions/workflows/deploy.yml/badge.svg)](https://github.com/akakanu/glycemie-app/actions/workflows/deploy.yml)
+[![env-down](https://github.com/akakanu/glycemie-app/actions/workflows/env-down.yml/badge.svg)](https://github.com/akakanu/glycemie-app/actions/workflows/env-down.yml)
 
 Application web de suivi de la glycémie : l'utilisateur crée un compte, saisit une mesure en précisant le moment (à jeun, 1 h, 2 h ou 4 h et plus après le repas) et reçoit une interprétation avec des conseils généraux.
 
@@ -7,9 +11,20 @@ Application web de suivi de la glycémie : l'utilisateur crée un compte, saisit
 | Partie | Techno | Dossier | État |
 |---|---|---|---|
 | Backend | ASP.NET Core 8 Web API | `backend/` | Fait |
-| Frontend | Angular 21 | `frontend/` | Fonctionnel, style provisoire |
-| Base de données | MongoDB Atlas (M0) | n/a | Configurée |
-| Design | Claude Design | `design/` | Maquette à intégrer |
+| Frontend | Angular 21 | `frontend/` | Fait, maquette intégrée |
+| Base de données | MongoDB Atlas (M0, Azure Toronto) | n/a | `glycemie` (dev), `glycemie-prod` (prod) |
+| Design | Claude Design, design system Organic | `design/` | Intégré |
+| Déploiement | GitHub Actions, Docker, AKS, Terraform | `.github/`, `infra/`, `k8s/`, `scripts/` | En production, à la demande |
+
+## Déploiement
+
+L'application est déployée sur **Azure Kubernetes Service**, dans un environnement **éphémère** : le cluster est créé au début d'une session de travail (workflow `env-up`) et détruit à la fin (`env-down`, aussi lancé automatiquement chaque nuit).
+
+- **URL** : https://glycosuivi.canadaeast.cloudapp.azure.com, en ligne seulement pendant les sessions.
+- **Chaîne CI/CD** : chaque push sur `main` est testé, construit en images Docker scannées, publié sur GHCR, puis redéployé automatiquement si l'environnement est allumé, avec retour arrière en cas d'échec.
+- **Coût** : environ 0,12 $ US par heure de session, et presque rien entre deux sessions.
+
+Architecture, routine d'une session, installation depuis zéro et dépannage : **[docs/deploiement.md](docs/deploiement.md)**.
 
 ## Prérequis
 
@@ -64,7 +79,9 @@ En développement, Angular redirige les appels `/api` vers `http://localhost:507
 | `/mesures/:id` | Résultat et conseils | connecté |
 | `/historique` | Historique filtrable | connecté |
 
-Organisation : `src/app/core/` (modèles, services, intercepteur, gardes), `src/app/pages/` (une page par route), `src/app/shared/` (badge de niveau, jauge, avertissement, validateurs). Le style provisoire est dans `src/styles.scss`, avec des tokens CSS en tête de fichier à remplacer par ceux de la maquette.
+Organisation : `src/app/core/` (modèles, services, intercepteur, gardes), `src/app/pages/` (une page par route), `src/app/shared/` (badge de niveau, jauge, avertissement, icônes, validateurs). Le design system de la maquette (couleurs, polices, espacements) est dans `src/styles.scss`.
+
+Pas de Docker sur ton poste ? Les images sont construites par GitHub Actions. Pour tester des conteneurs à la main, ouvre le dépôt dans **GitHub Codespaces** : le dossier `.devcontainer/` fournit .NET 8, Node 22, Docker, kubectl, Helm, Terraform et Azure CLI.
 
 ## API
 
@@ -77,6 +94,10 @@ Organisation : `src/app/core/` (modèles, services, intercepteur, gardes), `src/
 | GET | `/api/readings/{id}` | JWT | Détail, 404 si la mesure n'appartient pas à l'utilisateur |
 
 Valeurs de `moment` : `Fasting`, `OneHourAfterMeal`, `TwoHoursAfterMeal`, `FourHoursOrMoreAfterMeal`.
+
+Sondes de santé (utilisées par Kubernetes, non exposées publiquement) :
+- `GET /health/live` : le processus répond.
+- `GET /health/ready` : MongoDB est joignable **et** l'API y est authentifiée (`listCollections`, que MongoDB refuse sans authentification, contrairement à `ping`).
 
 ## Grille d'interprétation (mmol/L)
 
@@ -97,6 +118,12 @@ Valeurs de `moment` : `Fasting`, `OneHourAfterMeal`, `TwoHoursAfterMeal`, `FourH
 - Jeton JWT valide 60 minutes
 - L'identifiant utilisateur est toujours lu dans le jeton, jamais dans la requête
 - Message d'erreur de connexion identique que le courriel existe ou non
+- En production :
+  - secrets dans Azure Key Vault, lus par les pods via Workload Identity, jamais dans le dépôt ni dans Terraform ;
+  - accès GitHub vers Azure en OIDC, sans mot de passe ;
+  - conteneurs non root avec système de fichiers en lecture seule (Pod Security `restricted`) ;
+  - images scannées par Trivy ;
+  - HTTPS obligatoire, avec HSTS.
 
 ## Limites du MVP
 
