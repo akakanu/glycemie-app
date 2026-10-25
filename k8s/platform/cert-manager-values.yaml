@@ -21,6 +21,31 @@ webhook:
       cpu: 10m
       memory: 32Mi
 
+  # AKS (admissions enforcer) ajoute lui-même ces exclusions à tous les webhooks pour protéger ses
+  # namespaces système. On les déclare à l'identique : sinon, Helm 4 (server-side apply) refuse la
+  # mise à jour, car le champ appartient alors à un autre gestionnaire (conflit au 2e helm upgrade).
+  validatingWebhookConfiguration:
+    namespaceSelector:
+      matchExpressions:
+        - key: cert-manager.io/disable-validation
+          operator: NotIn
+          values: ["true"]
+        - key: control-plane
+          operator: NotIn
+          values: ["true"]
+        - key: kubernetes.azure.com/managedby
+          operator: NotIn
+          values: ["aks"]
+  mutatingWebhookConfiguration:
+    namespaceSelector:
+      matchExpressions:
+        - key: control-plane
+          operator: NotIn
+          values: ["true"]
+        - key: kubernetes.azure.com/managedby
+          operator: NotIn
+          values: ["aks"]
+
 cainjector:
   resources:
     requests:
